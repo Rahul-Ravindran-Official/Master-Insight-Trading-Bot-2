@@ -1,7 +1,9 @@
 import pandas as pd
 
+from indicators.Indicator import Indicator
 
-class Macd:
+
+class Macd(Indicator):
     period_fast: int
     period_slow: int
     signal_period: int

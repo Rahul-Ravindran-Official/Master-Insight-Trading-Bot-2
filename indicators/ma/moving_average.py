@@ -1,9 +1,10 @@
 import pandas as pd
 
+from indicators.Indicator import Indicator
 from indicators.ma.ma_type import MAType
 
 
-class MovingAverage:
+class MovingAverage(Indicator):
     period: int
     type: MAType
 
