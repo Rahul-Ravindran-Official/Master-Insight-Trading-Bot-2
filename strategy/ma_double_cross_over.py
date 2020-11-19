@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 import pandas as pd
 
@@ -11,12 +11,14 @@ from shared.Strategy import Strategy
 class MADoubleCrossOver(Strategy):
     period_fast: int
     period_slow: int
+    signal_col_name: str
 
-    def __init__(self, period_fast: int = 50, period_slow: int = 200):
+    def __init__(self, magic_no: int, period_fast: int = 50, period_slow: int = 200):
         self.period_fast = period_fast
         self.period_slow = period_slow
+        self.signal_col_name = 'MADCO-' + str(magic_no)
 
-    def get_signals(self, ohlc_df: pd.DataFrame) -> pd.DataFrame:
+    def get_bbhss_signal(self, ohlc_df: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
         working_df = ohlc_df.__deepcopy__()
 
         working_df, cols_ma_fast = MovingAverage(
@@ -32,16 +34,17 @@ class MADoubleCrossOver(Strategy):
             'ma_slow': cols_ma_slow[0]
         }
 
-        return self.process_to_bbhss(working_df, metadata)
+        return self.process_to_bbhss(working_df, metadata), self.signal_col_name
 
     def process_to_bbhss(self, signals_and_ohlc_df: pd.DataFrame, metadata: Dict) -> pd.DataFrame:
 
         bbhss_mapper = {
-            True: BBHSSSignal.buy,
-            False: BBHSSSignal.sell
+            True: BBHSSSignal.buy.value,
+            False: BBHSSSignal.sell.value
         }
 
         signals_and_ohlc_df.dropna(inplace=True)
-        signals_and_ohlc_df['MDCO_SIG'] = signals_and_ohlc_df[metadata['ma_fast']] > signals_and_ohlc_df[metadata['ma_slow']]
-        signals_and_ohlc_df['MDCO_SIG'] = signals_and_ohlc_df['MDCO_SIG'].map(bbhss_mapper)
+        signals_and_ohlc_df[self.signal_col_name] = signals_and_ohlc_df[metadata['ma_fast']] > signals_and_ohlc_df[metadata['ma_slow']]
+        signals_and_ohlc_df[self.signal_col_name] = signals_and_ohlc_df[self.signal_col_name].map(bbhss_mapper)
+
         return signals_and_ohlc_df
