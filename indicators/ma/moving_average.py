@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import pandas as pd
 
 from indicators.Indicator import Indicator
@@ -8,33 +10,34 @@ class MovingAverage(Indicator):
     period: int
     type: MAType
 
-    def __init__(self, period: int = 12, type: MAType = MAType.ema):
+    def __init__(self, period: int = 12, ma_type: MAType = MAType.ema):
         self.period = period
-        self.type = type
+        self.type = ma_type
 
     def get_signal(
             self,
-            ohlc_df: pd.DataFrame,
-    ) -> pd.DataFrame:
+            ohlc_df: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, List[str]]:
         """
         Calculates and returns moving average
 
         :param ohlc_df: A yfinance OHLC Dataframe
-        :return: Dataframe with columns "ma_period_<the-period>"
+        :return: Complete Dataframe and "ma_period_<the-period>"
         """
+
+        signal_col_name = "ma_period_" + str(self.period)
+
         df = ohlc_df.copy()
 
         # Intermediary Computations - Stage 1
         if self.type == MAType.ema:
-            df["ma_period_" + str(self.period)] = df["Adj Close"].ewm(
+            df[signal_col_name] = df["Adj Close"].ewm(
                 span=self.period,
                 min_periods=self.period
             ).mean()
         else:
-            df["ma_period_" + str(self.period)] = df["Adj Close"].rolling(
+            df[signal_col_name] = df["Adj Close"].rolling(
                 window=self.period
             ).mean()
 
-        df.dropna(inplace=True)
-
-        return df[["ma_period_" + str(self.period)]]
+        return df, [signal_col_name]

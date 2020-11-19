@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import pandas as pd
 
 from indicators.Indicator import Indicator
@@ -21,7 +23,7 @@ class Macd(Indicator):
     def get_signal(
             self,
             ohlc_df: pd.DataFrame,
-    ) -> pd.DataFrame:
+    ) -> Tuple[pd.DataFrame, List[str]]:
         """
         Calculates and returns MACD & Signal
 
@@ -49,6 +51,4 @@ class Macd(Indicator):
             span=self.signal_period,
             min_periods=self.signal_period).mean()
 
-        df.dropna(inplace=True)
-
-        return df[["MACD", "Signal"]]
+        return df, ["MACD", "Signal"]
