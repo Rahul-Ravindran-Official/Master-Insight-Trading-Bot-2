@@ -6,11 +6,8 @@ currencies = ['AAPL', 'MSFT', 'EURUSD=X', 'GBPUSD=X', 'AUDUSD=X', 'NZDUSD=X', 'G
 for currency in currencies[:]:
     print("Computing: " + currency)
     print(
-        BackTester(
-            currency,
-            {
-                MADoubleCrossOver(5, 10): 0.5,
-                MADoubleCrossOver(20, 50): 0.5
-            }
-        ).run()
+        BackTester(currency, {
+            MADoubleCrossOver(5, 10): 0.5,
+            MADoubleCrossOver(20, 50): 0.5
+        }).run()
     )

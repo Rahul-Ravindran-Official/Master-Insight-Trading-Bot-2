@@ -3,6 +3,7 @@ from typing import Dict, List
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from backtesting.analytics.analytics_manager import AnalyticsManager
 from backtesting.signal_processor.signal_manager import SignalManager
 from market_data.ohlc_data import obtain_ohlc_data
 from shared.BBHSSSignal import BBHSSSignal
@@ -17,13 +18,15 @@ class BackTester:
     current_trade: BHSSignal
     current_trade_executed: bool
     strategies: Dict[Strategy, float]
+    analytics: AnalyticsManager
 
-    def __init__(self, trading_entity: str, strategies: Dict[Strategy, float]):
-        self.ohlc_data = obtain_ohlc_data(trading_entity)
+    def __init__(self, commodity: str, strategies: Dict[Strategy, float]):
+        self.ohlc_data = obtain_ohlc_data(commodity)
         self.current_trade = BHSSignal.hold
         self.current_trade_executed = True
         self.strategies = strategies
         self.strategy_signal_columns = []
+        self.analytics = AnalyticsManager(commodity)
 
     def run(self):
 
@@ -51,12 +54,15 @@ class BackTester:
             elif self.current_trade != BHSSignal.hold:
                 self.returns_keeper(i)
 
+            self.analytics.analyse_record(self.ohlc_data.loc[self.ohlc_data.index[i]])
+
             last_signal = signal
 
         self.ohlc_data[['cum_ret']] = self.ohlc_data[['cum_ret']].fillna(method='ffill')
 
         self.visualize_pct_return()
 
+        print(self.analytics)
         return self.get_pct_return(), self.trades_made()
 
     def init_columns(self):
