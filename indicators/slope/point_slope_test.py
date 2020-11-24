@@ -1,6 +1,6 @@
 import unittest
 
-from indicators.point_slope.point_slope import PointSlope
+from indicators.slope.point_slope import PointSlope
 from market_data.ohlc_data import obtain_ohlc_data
 import matplotlib.pyplot as plt
 import pandas as pd

@@ -22,12 +22,16 @@ class MADoubleCrossOver(Strategy):
         working_df = ohlc_df.__deepcopy__()
 
         working_df, cols_ma_fast = MovingAverage(
-            self.period_fast, MAType.ema
-        ).get_signal(working_df)
+            ohlc_df=working_df,
+            period=self.period_fast,
+            ma_type=MAType.ema
+        ).get_signal()
 
         working_df, cols_ma_slow = MovingAverage(
-            self.period_slow, MAType.ema
-        ).get_signal(working_df)
+            ohlc_df=working_df,
+            period=self.period_slow,
+            ma_type=MAType.ema
+        ).get_signal()
 
         metadata = {
             'ma_fast': cols_ma_fast[0],

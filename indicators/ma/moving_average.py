@@ -7,37 +7,41 @@ from indicators.ma.ma_type import MAType
 
 
 class MovingAverage(Indicator):
+
+    ohlc_df: pd.DataFrame
     period: int
     type: MAType
 
-    def __init__(self, period: int = 12, ma_type: MAType = MAType.ema):
+    def __init__(self, ohlc_df: pd.DataFrame, period: int = 12, ma_type: MAType = MAType.ema):
+        """
+        :param ohlc_df: Dataframe containing security data
+        :param period: period to take the moving avg for.
+        :param ma_type: Exponential | Simple
+        """
+        self.ohlc_df = ohlc_df.__deepcopy__()
         self.period = period
         self.type = ma_type
 
     def get_signal(
-            self,
-            ohlc_df: pd.DataFrame
+            self
     ) -> Tuple[pd.DataFrame, List[str]]:
         """
         Calculates and returns moving average
 
-        :param ohlc_df: A yfinance OHLC Dataframe
         :return: Complete Dataframe and "ma_period_<the-period>"
         """
 
         signal_col_name = "ma_period_" + str(self.period)
 
-        df = ohlc_df.copy()
-
         # Intermediary Computations - Stage 1
         if self.type == MAType.ema:
-            df[signal_col_name] = df["Adj Close"].ewm(
+            self.ohlc_df[signal_col_name] = self.ohlc_df["Adj Close"].ewm(
                 span=self.period,
                 min_periods=self.period
             ).mean()
         else:
-            df[signal_col_name] = df["Adj Close"].rolling(
+            self.ohlc_df[signal_col_name] = self.ohlc_df["Adj Close"].rolling(
                 window=self.period
             ).mean()
 
-        return df, [signal_col_name]
+        return self.ohlc_df, [signal_col_name]

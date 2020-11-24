@@ -5,7 +5,7 @@ if __name__ == "__main__":
     currencies = ['AAPL', 'MSFT', 'EURUSD=X', 'GBPUSD=X', 'AUDUSD=X',
                   'NZDUSD=X', 'GOOGL']
 
-    for currency in currencies[:]:
+    for currency in currencies[:1]:
         print("Computing: " + currency)
         print(
             BackTester(currency, {
