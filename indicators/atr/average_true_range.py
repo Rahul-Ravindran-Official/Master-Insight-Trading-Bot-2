@@ -18,7 +18,7 @@ class AverageTrueRange(Indicator):
             self
     ) -> Tuple[pd.DataFrame, List[str]]:
         """
-        Calculates and returns the average true range
+        Calculates and returns the average true range, and true range
         :return: Complete Dataframe and its corresponding signal column
         """
 
