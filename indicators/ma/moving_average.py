@@ -18,7 +18,7 @@ class MovingAverage(Indicator):
         :param period: period to take the moving avg for.
         :param ma_type: Exponential | Simple
         """
-        self.ohlc_df = ohlc_df.__deepcopy__()
+        self.ohlc_df = ohlc_df.copy(deep=True)
         self.period = period
         self.type = ma_type
 

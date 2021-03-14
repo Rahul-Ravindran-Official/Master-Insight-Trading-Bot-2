@@ -22,9 +22,13 @@ class SignalManager:
         self.strategy_signal_columns = []
         self.strategy_weightage = []
 
-    def get_master_signal(self):
-        self.ohlc_data, self.strategy_signal_columns, self.strategy_weightage =\
+    def get_raw_signals(self):
+        self.ohlc_data, self.strategy_signal_columns, self.strategy_weightage = \
             self.obtain_bbhss_signals()
+        return self.ohlc_data
+
+    def get_master_signal(self):
+        self.get_raw_signals()
         get_df_with_master_sig = self.merge_bbhss_signals()
         return get_df_with_master_sig
 

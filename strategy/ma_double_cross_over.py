@@ -47,8 +47,9 @@ class MADoubleCrossOver(Strategy):
             False: BBHSSSignal.sell.value
         }
 
-        signals_and_ohlc_df.dropna(inplace=True)
         signals_and_ohlc_df[self.signal_col_name] = signals_and_ohlc_df[metadata['ma_fast']] > signals_and_ohlc_df[metadata['ma_slow']]
         signals_and_ohlc_df[self.signal_col_name] = signals_and_ohlc_df[self.signal_col_name].map(bbhss_mapper)
+
+        signals_and_ohlc_df.drop([metadata['ma_fast'], metadata['ma_slow']], axis=1, inplace=True)
 
         return signals_and_ohlc_df

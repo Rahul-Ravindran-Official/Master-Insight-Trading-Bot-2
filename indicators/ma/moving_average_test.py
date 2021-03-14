@@ -6,6 +6,8 @@ from indicators.ma.ma_type import MAType
 from indicators.ma.moving_average import MovingAverage
 from market_data.ohlc_data import obtain_ohlc_data
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 
 class MovingAverageTest(unittest.TestCase):
@@ -38,6 +40,17 @@ class MovingAverageTest(unittest.TestCase):
         ma_ohlc, sig_cols = MovingAverage(period, MAType.sma).get_signal(dataset)
         ma_ohlc.dropna(inplace=True)
         self.assertListEqual(list(np.around(ma_ohlc.get(sig_cols).ma_period_3, 2)), dataset_output)
+
+    def test_ma_visualization(self):
+        dataset = obtain_ohlc_data('MSFT')[:300]
+        period: int = 7
+        ma_ohlc, sig_cols = MovingAverage(dataset, period, MAType.ema).get_signal()
+
+
+
+        plt.plot(ma_ohlc.index, ma_ohlc["Adj Close"], label="Adj Close")
+        plt.plot(ma_ohlc.index, ma_ohlc["ma_period_7"], label="MA")
+        plt.show()
 
     def test_ema_computation(self):
         # todo

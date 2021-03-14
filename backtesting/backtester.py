@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -19,14 +19,21 @@ class BackTester:
     current_trade_executed: bool
     strategies: Dict[Strategy, float]
     analytics: AnalyticsManager
+    risk: Dict[str, Callable[[float], float]]  # enter_buy, enter_sell, exit_buy, exit_sell
 
-    def __init__(self, commodity: str, strategies: Dict[Strategy, float]):
+    def __init__(
+            self,
+            commodity: str,
+            strategies: Dict[Strategy, float],
+            risk: Dict[str, Callable[[float], float]]
+    ):
         self.ohlc_data = obtain_ohlc_data(commodity)
         self.current_trade = BHSSignal.hold
         self.current_trade_executed = True
         self.strategies = strategies
         self.strategy_signal_columns = []
         self.analytics = AnalyticsManager(commodity)
+        self.risk = risk
 
     def run(self):
 
@@ -121,16 +128,16 @@ class BackTester:
             self.ohlc_data.loc[self.ohlc_data.index[i], 'cum_ret'] = self.ohlc_data[['daily_ret']].dropna().to_numpy().sum()
 
     def sell_exit_condition(self, current_signal: float, last_signal: float):
-        return current_signal >= BBHSSSignal.hold.value
+        return self.risk['exit_sell'](current_signal)
 
     def sell_condition(self, current_signal: float, last_signal: float):
-        return current_signal <= BBHSSSignal.sell.value
+        return self.risk['enter_sell'](current_signal)
 
     def buy_condition(self, current_signal: float, last_signal: float):
-        return current_signal >= BBHSSSignal.buy.value
+        return self.risk['enter_buy'](current_signal)
 
     def buy_exit_condition(self, current_signal: float, last_signal: float):
-        return current_signal <= BBHSSSignal.hold.value
+        return self.risk['exit_buy'](current_signal)
 
     def get_pct_return(self):
         return self.ohlc_data[['cum_ret']].iloc[-1][0]
