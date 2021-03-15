@@ -2,8 +2,7 @@ import math
 from typing import Tuple
 
 import numpy as np
-
-from shared import BBHSSSignal
+from sklearn.preprocessing import minmax_scale
 
 
 class MultiSignalPredictor:
@@ -41,11 +40,31 @@ class MultiSignalPredictor:
 
     generate_prediction_matrix: np.matrix
 
-    def __init__(self, input_signal: np.matrix, output_signal: np.matrix,
-                 train_to_test_ratio: float):
+    prediction_cutoff: float
+
+    def __init__(
+            self, input_signal: np.matrix,
+            output_signal: np.matrix, train_to_test_ratio: float,
+            prediction_cutoff: float
+    ):
         self.input_signals = input_signal
         self.output_signal = output_signal
         self.train_to_test_ratio = train_to_test_ratio
+        self.prediction_cutoff = prediction_cutoff
+
+    def compute_magic_numbers(self):
+        self.split_train_test()
+        self.perform_qr_factorization()
+        self.performance_residual = HouseholderUtility.find_residual(
+            self.qr_factorised_input_signals,
+            self.qr_factorised_output_signals,
+            self.qr_magic_numbers
+        )
+        print("Performance Residual : " + str(self.performance_residual))
+
+        self.generate_prediction_vector()
+
+        self.generate_prediction_signal()
 
     def split_train_test(self):
         total_rows = self.input_signals.shape[0]
@@ -60,24 +79,38 @@ class MultiSignalPredictor:
         self.output_signals_test = self.output_signal[train_rows:]
 
     def perform_qr_factorization(self):
+        self.qr_magic_numbers, \
         self.qr_factorised_input_signals, \
-        self.qr_factorised_output_signals = \
-            HouseholderUtility.solve_qr_householder(
-                self.input_signals_train, self.output_signal_train
-            )
+        self.qr_factorised_output_signals = HouseholderUtility.solve_qr_householder(
+                self.input_signals_train, self.output_signals_train
+        )
 
-    def generate_prediction_matrix(self):
-        pass
+    def generate_prediction_vector(self):
+        self.prediction_vector = np.matmul(self.input_signals_train, self.qr_magic_numbers)
+        self.prediction_vector_test = np.matmul(self.input_signals_test, self.qr_magic_numbers)
 
-    def predict_bbhss_signal(self) -> BBHSSSignal:
-        pass
+    def predict_signal_row(self, input_signal: np.array) -> float:
+        confidence = float(np.matmul(input_signal, self.qr_magic_numbers))
+        return confidence >= self.prediction_cutoff
 
-    def prediction_accuracy(self) -> float:
-        pass
+    def generate_prediction_signal(self):
 
-    def training_fit(self) -> float:
-        HouseholderUtility.find_residual()
+        pv_train_normalised = minmax_scale(
+            self.prediction_vector,
+            feature_range=(0, 1),
+            axis=0,
+            copy=True
+        )
 
+        pv_test_normalised = minmax_scale(
+            self.prediction_vector_test,
+            feature_range=(0, 1),
+            axis=0,
+            copy=True
+        )
+
+        self.prediction_vector_signal = (pv_train_normalised >= self.prediction_cutoff).astype(np.float32)
+        self.prediction_vector_test_signal = (pv_test_normalised >= self.prediction_cutoff).astype(np.float32)
 
 class HouseholderUtility:
 
@@ -185,7 +218,7 @@ class HouseholderUtility:
         return x
 
     @staticmethod
-    def solve_qr_householder(A, b) -> Tuple[np.matrix, np.matrix]:
+    def solve_qr_householder(A, b) -> Tuple[np.matrix, np.matrix, np.matrix]:
         """
         Return the solution x to the linear least squares problem
             $$Ax \approx b$$ using Householder QR decomposition.
@@ -200,7 +233,7 @@ class HouseholderUtility:
         new_A = cpy_A[0:cpy_A.shape[1], 0:cpy_A.shape[1]]
         new_b = cpy_b[0:cpy_A.shape[1]]
         r = HouseholderUtility.back_substitution(new_A, new_b)
-        return r.T
+        return r.T, new_A, new_b
 
     @staticmethod
     def find_residual(A: np.matrix, b: np.matrix, r: np.matrix) -> float:

@@ -1,16 +1,15 @@
 from backtesting.signal_processor.signal_manager import SignalManager
 from bollinger_bands_simple_breakout import BollingerBandsSimpleBreakout
 from ma_double_cross_over import MADoubleCrossOver
-from market_data.ohlc_data import obtain_ohlc_data
+import pandas as pd
 
-
-class GetSignalMatrix:
+class InputSignalMatrix:
     """
 
     """
 
-    def __init__(self):
-        self.ohlc_data = obtain_ohlc_data("AAPL")
+    def __init__(self, dataset: pd.DataFrame):
+        self.ohlc_data = dataset
         self.signal_manager = SignalManager(
             self.ohlc_data,
             {
@@ -31,11 +30,9 @@ class GetSignalMatrix:
             }
         )
 
-        self.ohlc_data = self.signal_manager.get_raw_signals()
-
-
-
+    def get_input_matrix(self) -> pd.DataFrame:
+        return self.signal_manager.get_raw_signals()
 
 
 if __name__ == "__main__":
-    a = GetSignalMatrix()
+    pass
