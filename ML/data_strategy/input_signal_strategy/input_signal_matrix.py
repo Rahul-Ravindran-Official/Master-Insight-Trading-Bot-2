@@ -31,7 +31,9 @@ class InputSignalMatrix:
         )
 
     def get_input_matrix(self) -> pd.DataFrame:
-        return self.signal_manager.get_raw_signals()
+        sg = self.signal_manager.get_raw_signals()
+        sg.to_csv(r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_strategy/output_signal_strategy/A.csv', index=False, header=True)
+        return sg
 
 
 if __name__ == "__main__":

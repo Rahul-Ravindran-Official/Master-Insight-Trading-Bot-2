@@ -17,7 +17,8 @@ class IOProvider:
     output_vector: np.array
 
     def __init__(self, symbol: str):
-        self.ohlc_data = obtain_ohlc_data(symbol)
+        self.ohlc_data = obtain_ohlc_data(symbol, include_all_indicators=True)
+
 
     def obtain_input_matrix(self) -> np.array:
         ism = InputSignalMatrix(self.ohlc_data)

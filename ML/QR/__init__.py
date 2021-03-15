@@ -50,10 +50,10 @@ class QRH_Strategy_Tester(unittest.TestCase):
     def visualize(self, line_1, line_2, show_graphs:int = 3):
 
         if show_graphs == 1 or show_graphs == 3:
-            plt.plot(line_1, c="b")
+            plt.plot(line_1[:], c="b")
 
         if show_graphs == 2 or show_graphs == 3:
-            plt.plot(line_2, c="r")
+            plt.plot(line_2[:], c="r")
 
         plt.show()
 
@@ -112,7 +112,7 @@ class QRH_Strategy_Tester(unittest.TestCase):
 
 if __name__ == "__main__":
     qst = QRH_Strategy_Tester()
-    qst.test_test_probability()
+    qst.test_train_probability()
 
 # if __name__ == "__main__":
 #

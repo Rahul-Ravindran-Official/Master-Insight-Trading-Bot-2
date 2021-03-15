@@ -3,7 +3,7 @@ from typing import Tuple
 
 import numpy as np
 from sklearn.preprocessing import minmax_scale
-
+import pandas as pd
 
 class MultiSignalPredictor:
     """
@@ -48,7 +48,18 @@ class MultiSignalPredictor:
             prediction_cutoff: float
     ):
         self.input_signals = input_signal
+
+        # Temporary
+        self.input_signals = (pd.DataFrame(self.input_signals).bfill()).to_numpy()
+
+        self.input_signals = self.normalize_0_1_filter(self.input_signals)
+
         self.output_signal = output_signal
+        pd.DataFrame(output_signal).to_csv(
+            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_strategy/output_signal_strategy/b.csv',
+            index=False,
+            header=True
+        )
         self.train_to_test_ratio = train_to_test_ratio
         self.prediction_cutoff = prediction_cutoff
 
@@ -87,6 +98,11 @@ class MultiSignalPredictor:
 
     def generate_prediction_vector(self):
         self.prediction_vector = np.matmul(self.input_signals_train, self.qr_magic_numbers)
+        pd.DataFrame(self.prediction_vector).to_csv(
+            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_strategy/output_signal_strategy/predicted.csv',
+            index=False,
+            header=True
+        )
         self.prediction_vector_test = np.matmul(self.input_signals_test, self.qr_magic_numbers)
 
     def predict_signal_row(self, input_signal: np.array) -> float:
@@ -111,6 +127,14 @@ class MultiSignalPredictor:
 
         self.prediction_vector_signal = (pv_train_normalised >= self.prediction_cutoff).astype(np.float32)
         self.prediction_vector_test_signal = (pv_test_normalised >= self.prediction_cutoff).astype(np.float32)
+
+    def normalize_0_1_filter(self, data):
+        return minmax_scale(
+            data,
+            feature_range=(0, 1),
+            axis=0,
+            copy=True
+        )
 
 class HouseholderUtility:
 
