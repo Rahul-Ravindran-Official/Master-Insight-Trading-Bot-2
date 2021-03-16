@@ -1,4 +1,6 @@
 import unittest
+from typing import List, Tuple
+
 import matplotlib.pyplot as plt
 from scipy.misc import electrocardiogram
 from scipy.signal import find_peaks
@@ -81,6 +83,14 @@ class OutputSignalVector:
         self.sig_peaks = peaks
         self.sig_throughs = throughs
 
+    def signal_mux(self, signal: str):
+        if signal == "get_buy_signals":
+            return self.get_buy_signals()
+        elif signal == "get_sell_signals":
+            return self.get_sell_signals()
+        elif signal == "get_gradient_signals":
+            return self.get_gradient_signals()
+
     def get_buy_signals(self) -> np.array:
         output_signal = np.zeros((1, self.count))
         for i in self.sig_throughs:
@@ -92,6 +102,38 @@ class OutputSignalVector:
         for i in self.sig_peaks:
             output_signal[0][i] = 1
         return output_signal
+
+    def get_gradient_signals(self) -> np.array:
+        output_signal = np.zeros((1, self.count))
+
+        # Add In Maxima, Minima Signals
+        ## Add in Maxima Signal
+        for i in self.sig_peaks:
+            output_signal[0][i] = -1
+
+        ## Add in Minima Signal
+        for i in self.sig_throughs:
+            output_signal[0][i] = 1
+
+        # Add in Gradient Signals
+        return self.generate_intermediate_signals(output_signal)
+
+    def get_pred_profit_signals(self) -> np.array:
+        output_signal = np.zeros((1, self.count))
+
+        # Add In Maxima, Minima Signals
+        ## Add in Maxima Signal
+        for i in self.sig_peaks:
+            output_signal[0][i] = -1
+
+        ## Add in Minima Signal
+        for i in self.sig_throughs:
+            output_signal[0][i] = 1
+
+        # Add in Pred Profits Signals
+        self.start_end_set = self.generate_min_max_pairs(output_signal)
+
+        return -1
 
     def smooth_algo_1(self, data, cnt: int = 200, smooth_intensity: int = 3):
         data = data[:cnt]
@@ -121,6 +163,51 @@ class OutputSignalVector:
                 profit += (p / max_min_range) * 100
 
         return profit
+
+    def generate_min_max_pairs(self, input: np.array):
+        # A = np.array([0, 0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1])
+
+        start_end_set: List[Tuple[int, int, int]] = []
+
+        sign_arr = []
+        idx_arr = []
+
+        for i in range(len(input[0])):
+
+            sign = input[0][i]
+
+            if sign == 1 or sign == -1:
+
+                sign_arr.append(sign)
+                idx_arr.append(i)
+
+                if len(sign_arr) == 2:
+                    start_end_set.append(
+                        (idx_arr[0], idx_arr[1], sign_arr[0]))
+                    sign_arr.pop(0)
+                    idx_arr.pop(0)
+        return start_end_set
+
+    def generate_intermediate_signals(self, input: np.array):
+
+        self.start_end_set = self.generate_min_max_pairs(input)
+
+        a = np.array(input, dtype=np.object)
+
+        # Apply Ranges
+        for s in self.start_end_set:
+            i0 = s[0]
+            i1 = s[1]
+            sign = s[2]
+
+            element_count = i1 - i0
+
+            if sign == 1:
+                a[0][i0+1:i1] = np.arange(1, -1, - (2 / element_count))[1:]
+            else:
+                a[0][i0 + 1:i1] = np.arange(-1, 1, (2 / element_count))[1:]
+
+        return np.array(a, dtype=np.float)
 
 class PlaygroundOutputSignalMatrix(unittest.TestCase):
 

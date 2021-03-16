@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import minmax_scale
 from scipy.signal import lfilter
 
+from market_data.ohlc_data import obtain_ohlc_data
+
+
 class QRH_Strategy_Tester(unittest.TestCase):
 
     def init(
@@ -15,12 +18,16 @@ class QRH_Strategy_Tester(unittest.TestCase):
             prediction_cutoff: float,
             interested_data: str = "train_binary_signal",
             interested_data_smoothening: int = 1,
-            show_graphs=3
+            show_graphs=3,
+            # training_signal="get_buy_signals"
+            training_signal="get_gradient_signals"
     ):
 
         iop = IOProvider(ticker)
         input_matrix = iop.obtain_input_matrix()
-        output_vector = iop.obtain_output_vector()
+        output_vector, self.start_end_set = iop.obtain_output_vector(training_signal)
+
+
 
         msp = MultiSignalPredictor(
             input_matrix,
@@ -39,10 +46,12 @@ class QRH_Strategy_Tester(unittest.TestCase):
         }
 
         # Normalised Prediction Data
-        prediction_vector_normalised = self.normalize_0_1_filter(v_dict[interested_data][0])
+        # prediction_vector_normalised = self.normalize_0_1_filter(v_dict[interested_data][0])
+
+        self.normalize_every_range(v_dict[interested_data][0])
 
         # Smoothening
-        smoothened = self.smoothen_filter(prediction_vector_normalised, interested_data_smoothening)
+        smoothened = self.smoothen_filter(v_dict[interested_data][0], interested_data_smoothening)
 
         # Visualization
         self.visualize(smoothened, v_dict[interested_data][1], show_graphs)
@@ -50,10 +59,12 @@ class QRH_Strategy_Tester(unittest.TestCase):
     def visualize(self, line_1, line_2, show_graphs:int = 3):
 
         if show_graphs == 1 or show_graphs == 3:
-            plt.plot(line_1[:], c="b")
+            plt.plot(self.smoothen_filter(line_1[0:1000], 10), c="b")
 
         if show_graphs == 2 or show_graphs == 3:
-            plt.plot(line_2[:], c="r")
+            plt.plot(line_2[0:1000], c="r")
+
+        plt.plot(minmax_scale(obtain_ohlc_data('AAPL')["Close"].to_numpy()[0:1000],feature_range=(-1, 1),axis=0,copy=False))
 
         plt.show()
 
@@ -74,9 +85,23 @@ class QRH_Strategy_Tester(unittest.TestCase):
             copy=True
         )
 
+    def normalize_every_range(self, data):
+        i = 0
+        for s in self.start_end_set:
+            print(i)
+            i+=1
+            i0 = s[0]
+            i1 = s[1]
+            try:
+                d = data[i0:i1]
+                dfil = self.smoothen_filter(d, 10)
+                data[i0:i1] = minmax_scale(dfil,feature_range=(-1, 1),axis=0,copy=True)
+            except:
+                print("Did not normalize tuple: " + str(s))
+
     def test_train_probability(self):
         self.init(
-            ticker="MSFT",
+            ticker="AAPL",
             prediction_cutoff=0.50,
             interested_data="train_probability",
             interested_data_smoothening=1,
@@ -85,8 +110,8 @@ class QRH_Strategy_Tester(unittest.TestCase):
 
     def test_train_binary_signal(self):
         self.init(
-            ticker="MSFT",
-            prediction_cutoff=0.50,
+            ticker="AAPL",
+            prediction_cutoff=0.90,
             interested_data="train_binary_signal",
             interested_data_smoothening=1,
             show_graphs=3
@@ -94,7 +119,7 @@ class QRH_Strategy_Tester(unittest.TestCase):
 
     def test_test_probability(self):
         self.init(
-            ticker="MSFT",
+            ticker="AAPL",
             prediction_cutoff=0.50,
             interested_data="test_probability",
             interested_data_smoothening=1,
@@ -103,8 +128,8 @@ class QRH_Strategy_Tester(unittest.TestCase):
 
     def test_test_binary_signal(self):
         self.init(
-            ticker="MSFT",
-            prediction_cutoff=0.50,
+            ticker="AAPL",
+            prediction_cutoff=0.90,
             interested_data="test_binary_signal",
             interested_data_smoothening=1,
             show_graphs=3

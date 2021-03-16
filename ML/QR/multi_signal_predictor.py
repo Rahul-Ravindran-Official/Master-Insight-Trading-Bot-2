@@ -55,11 +55,6 @@ class MultiSignalPredictor:
         self.input_signals = self.normalize_0_1_filter(self.input_signals)
 
         self.output_signal = output_signal
-        pd.DataFrame(output_signal).to_csv(
-            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_strategy/output_signal_strategy/b.csv',
-            index=False,
-            header=True
-        )
         self.train_to_test_ratio = train_to_test_ratio
         self.prediction_cutoff = prediction_cutoff
 
