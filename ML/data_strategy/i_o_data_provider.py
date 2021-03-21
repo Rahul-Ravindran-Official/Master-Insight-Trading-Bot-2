@@ -18,8 +18,8 @@ class IOProvider:
 
 
     def __init__(self, symbol: str):
-        # self.ohlc_data = obtain_ohlc_data(symbol, include_all_indicators=True)
-        self.ohlc_data = obtain_ohlc_data(symbol, include_all_indicators=False)
+        self.ohlc_data = obtain_ohlc_data(symbol, include_all_indicators=True)
+        # self.ohlc_data = obtain_ohlc_data(symbol, include_all_indicators=False)
 
 
     def obtain_input_matrix(self) -> np.array:
@@ -31,9 +31,10 @@ class IOProvider:
         self.input_matrix.drop('MADCO-3', axis=1, inplace=True)
         self.input_matrix.drop('BolBSB-2', axis=1, inplace=True)
 
+        # return self.input_matrix
         return self.input_matrix.to_numpy()
 
-    def obtain_output_vector(self, training_signal="get_gradient_signals"):
+    def obtain_output_vector(self, training_signal="get_pred_profit_signals"):
         osv = OutputSignalVector(self.ohlc_data, -1)
         self.output_vector = osv.signal_mux(training_signal)
         return self.output_vector[0], osv.start_end_set

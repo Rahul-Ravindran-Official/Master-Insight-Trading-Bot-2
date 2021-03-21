@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import minmax_scale
 from scipy.signal import lfilter
-
+import pandas as pd
 from market_data.ohlc_data import obtain_ohlc_data
 
 
@@ -19,15 +19,25 @@ class QRH_Strategy_Tester(unittest.TestCase):
             interested_data: str = "train_binary_signal",
             interested_data_smoothening: int = 1,
             show_graphs=3,
-            # training_signal="get_buy_signals"
-            training_signal="get_gradient_signals"
+            training_signal="get_buy_signals"
+            # training_signal="get_gradient_signals"
+            # training_signal="get_pred_profit_signals"
     ):
 
         iop = IOProvider(ticker)
+
         input_matrix = iop.obtain_input_matrix()
         output_vector, self.start_end_set = iop.obtain_output_vector(training_signal)
 
+        pd.DataFrame(input_matrix).to_csv(
+            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_strategy/output_signal_strategy/input.csv',
+            index=False
+        )
 
+        pd.DataFrame(output_vector).to_csv(
+            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_strategy/output_signal_strategy/target.csv',
+            index=False
+        )
 
         msp = MultiSignalPredictor(
             input_matrix,
@@ -46,25 +56,25 @@ class QRH_Strategy_Tester(unittest.TestCase):
         }
 
         # Normalised Prediction Data
-        # prediction_vector_normalised = self.normalize_0_1_filter(v_dict[interested_data][0])
+        prediction_vector_normalised = self.normalize_0_1_filter(v_dict[interested_data][0])
 
-        self.normalize_every_range(v_dict[interested_data][0])
+        # self.normalize_every_range(v_dict[interested_data][0])
 
         # Smoothening
-        smoothened = self.smoothen_filter(v_dict[interested_data][0], interested_data_smoothening)
+        smoothened = self.smoothen_filter(prediction_vector_normalised, interested_data_smoothening)
 
         # Visualization
-        self.visualize(smoothened, v_dict[interested_data][1], show_graphs)
+        self.visualize(smoothened, self.normalize_0_1_filter(v_dict[interested_data][1]), show_graphs)
 
     def visualize(self, line_1, line_2, show_graphs:int = 3):
 
         if show_graphs == 1 or show_graphs == 3:
-            plt.plot(self.smoothen_filter(line_1[0:1000], 10), c="b")
+            plt.plot(self.smoothen_filter(line_1[0:], 10), c="b")
 
         if show_graphs == 2 or show_graphs == 3:
-            plt.plot(line_2[0:1000], c="r")
+            plt.plot(line_2[0:], c="r")
 
-        plt.plot(minmax_scale(obtain_ohlc_data('AAPL')["Close"].to_numpy()[0:1000],feature_range=(-1, 1),axis=0,copy=False))
+        # plt.plot(minmax_scale(obtain_ohlc_data('AAPL')["Close"].to_numpy()[0:1000],feature_range=(-1, 1),axis=0,copy=False))
 
         plt.show()
 

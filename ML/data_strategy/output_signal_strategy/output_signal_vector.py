@@ -34,6 +34,7 @@ class OutputSignalVector:
         self.smooth_intensity = smooth_intensity
         self.threshold = threshold
         self.compute_signals()
+        self.start_end_set = []
 
     def compute_signals(self):
 
@@ -90,6 +91,8 @@ class OutputSignalVector:
             return self.get_sell_signals()
         elif signal == "get_gradient_signals":
             return self.get_gradient_signals()
+        elif signal == "get_pred_profit_signals":
+            return self.get_pred_profit_signals()
 
     def get_buy_signals(self) -> np.array:
         output_signal = np.zeros((1, self.count))
@@ -116,6 +119,7 @@ class OutputSignalVector:
             output_signal[0][i] = 1
 
         # Add in Gradient Signals
+        self.get_pred_profit_signals()
         return self.generate_intermediate_signals(output_signal)
 
     def get_pred_profit_signals(self) -> np.array:
@@ -133,7 +137,16 @@ class OutputSignalVector:
         # Add in Pred Profits Signals
         self.start_end_set = self.generate_min_max_pairs(output_signal)
 
-        return -1
+
+        for s in self.start_end_set:
+            start_point = s[0]
+            end_point = s[1]
+            price_point_at_sp = self.ohlc_data["Adj Close"][end_point]
+
+            for i in range(start_point, end_point):
+                output_signal[0][i] = price_point_at_sp - self.ohlc_data["Adj Close"][i]
+
+        return output_signal
 
     def smooth_algo_1(self, data, cnt: int = 200, smooth_intensity: int = 3):
         data = data[:cnt]
