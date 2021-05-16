@@ -6,7 +6,8 @@ from ML.data_strategy.All_Indicators_Input import all_technical_indicator_inputs
 
 def obtain_ohlc_data(
         ticker: str,
-        start: dt.datetime=dt.date.today() - dt.timedelta(1825),
+        # start: dt.datetime=dt.date.today() - dt.timedelta(1825),
+        start: dt.datetime=dt.date.today() - dt.timedelta(11000),
         end: dt.datetime=dt.datetime.today(),
         include_all_indicators=False
 ):

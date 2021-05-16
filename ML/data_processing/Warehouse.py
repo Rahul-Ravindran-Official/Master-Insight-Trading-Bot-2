@@ -11,12 +11,13 @@ class Warehouse():
     def process_stock_data(self):
 
         # Obtain Data
+        # iop = IOProvider("EURUSD=X")
         iop = IOProvider("AAPL")
 
         input_matrix = iop.obtain_input_matrix()
 
         output_vector, _ = iop.obtain_output_vector(
-            "get_buy_signals"
+            "get_pred_profit_signals"
         )
 
         # Normalize individual columns
@@ -35,20 +36,16 @@ class Warehouse():
 
         # Export Data
         pd.DataFrame(input_matrix).to_csv(
-            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_processing/norm_A.csv',
+            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/random_forest/data_set_aapl_pred_profit/A.csv',
             index=False,
             header=True
         )
 
         pd.DataFrame(output_vector).to_csv(
-            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/data_processing/norm_b.csv',
+            r'/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/ML/random_forest/data_set_aapl_pred_profit/b_buy.csv',
             index=False,
             header=True
         )
-
-        p = 0
-
-
 
 if __name__ == '__main__':
     w = Warehouse()

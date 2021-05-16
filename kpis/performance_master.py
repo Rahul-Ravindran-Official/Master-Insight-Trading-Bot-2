@@ -20,7 +20,7 @@ class PerformanceMaster:
 
         tx_yield = []
 
-        for signal, idx in enumerate(self.buy_sell_signals):
+        for idx, signal in enumerate(self.buy_sell_signals):
 
             if signal == 0:
                 continue
@@ -44,3 +44,7 @@ class PerformanceMaster:
                 entry_price = curr_price
 
         return sum(tx_yield)
+
+
+if __name__ == "__main__":
+    print("Yield: " + str(PerformanceMaster([5, 6, 7, 8, 10, 9, 7, 5], [1, 0, 0, 0, -1, 0, 0, 1]).compute_yield()))

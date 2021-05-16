@@ -233,7 +233,7 @@ class PlaygroundOutputSignalMatrix(unittest.TestCase):
         return yy
 
     def get_data(self):
-        return obtain_ohlc_data('MSFT')["Adj Close"].to_numpy()
+        return obtain_ohlc_data('EURUSD=X')["Adj Close"].to_numpy()
 
     def profit_function(self, peaks, throughs, x):
         profit = 0
@@ -257,14 +257,15 @@ class PlaygroundOutputSignalMatrix(unittest.TestCase):
 
     def test_approach_1_awesome(self):
 
-        x = self.smooth_algo_1(self.get_data(), 400, 2)
+        x = self.smooth_algo_1(self.get_data(), 4000, 2)
 
         # Finding Local Maxima and Minima
         peaks, _ = find_peaks(x, height=0)
         throughs, _ = find_peaks(-x)
 
         # Remove Nearby Points
-        treshold = 1.5
+        # treshold = 1.5
+        treshold = 0.02
 
         peaks_and_throughs = np.concatenate((peaks, throughs))
         peaks_and_throughs.sort(kind='mergesort')
@@ -314,7 +315,7 @@ class PlaygroundOutputSignalMatrix(unittest.TestCase):
     def test_approach_2(self):
 
         org = self.get_data()[:200]
-        x = self.smooth_algo_1(self.get_data(), 200, 3)
+        x = self.smooth_algo_1(self.get_data(), 200, 2)
 
         peaks, _ = find_peaks(x, distance=5)
         # difference between peaks is >= 150
@@ -322,8 +323,8 @@ class PlaygroundOutputSignalMatrix(unittest.TestCase):
         # prints [186 180 177 171 177 169 167 164 158 162 172]
 
         plt.plot(x)
-        plt.plot(peaks, x[peaks], "x")
-        plt.plot(org, linewidth=1, linestyle="dashdot", c="g")
+        # plt.plot(peaks, x[peaks], "x")
+        # plt.plot(org, linewidth=2, c="g")
         plt.show()
 
     def test_approach_3(self):
