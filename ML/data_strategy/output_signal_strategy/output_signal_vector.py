@@ -137,7 +137,6 @@ class OutputSignalVector:
         # Add in Pred Profits Signals
         self.start_end_set = self.generate_min_max_pairs(output_signal)
 
-
         for s in self.start_end_set:
             start_point = s[0]
             end_point = s[1]
