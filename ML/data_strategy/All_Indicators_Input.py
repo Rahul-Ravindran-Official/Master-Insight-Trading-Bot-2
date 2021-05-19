@@ -24,6 +24,7 @@ def all_technical_indicator_inputs(ohlc_data):
                 print("Unable to process: " + str(indicator))
 
     # ohlc_data["SMA-10"] = talib.SMA(ohlc_data["Adj Close"], 10)
+    # ohlc_data["TEMA"] = talib.TEMA(ohlc_data["Adj Close"], 30)
     # ohlc_data["SMA-21"] = talib.SMA(ohlc_data["Adj Close"], 21)
     # ohlc_data["SMA-50"] = talib.SMA(ohlc_data["Adj Close"], 50)
     # ohlc_data["SMA-100"] = talib.SMA(ohlc_data["Adj Close"], 100)
