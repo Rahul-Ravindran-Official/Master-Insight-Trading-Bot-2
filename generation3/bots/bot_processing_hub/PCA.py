@@ -13,7 +13,7 @@ class pcaUtility:
     ) -> pd.DataFrame:
 
         narrowed_down_data = data.loc[:, pca_features]
-        pca = PCA(n_components=3)
+        pca = PCA(n_components=components)
         principal_components = pca.fit_transform(narrowed_down_data)
 
         pca_columns = []

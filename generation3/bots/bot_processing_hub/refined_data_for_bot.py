@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 import os.path
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -7,7 +7,7 @@ from sklearn.preprocessing import minmax_scale
 from generation3.bots.bot_processing_hub.PCA import pcaUtility
 
 
-class RefinedDataForBot:
+class RefinedData:
     """
     ticker: Name of the symbol to deliver
     features: The name of features required
@@ -15,21 +15,23 @@ class RefinedDataForBot:
     should_normalize: normalizes each column
     pca_strategy: if no -> {'use': false} if yes -> {'use': true, 'pca_components': number_of_components}
     """
-    ticker: str
-    features: Union[List[str], str]
-    data_split_strategy: Tuple[float, float, float]
-    should_normalize: bool
-    pca_strategy: Dict[str, any]
-    shuffle: bool
+    _ticker: str
+    _features: Union[List[str], str]
+    _data_split_strategy: Tuple[float, float, float]
+    _should_normalize: bool
+    _pca_strategy: Dict[str, any]
+    _shuffle: bool
+    _penalty_dataset: bool
 
-    predictors: pd.DataFrame
-    predictors_labels: List[str]
-    targets: pd.DataFrame
+    _predictors: pd.DataFrame
+    _predictors_labels: List[str]
+    _targets: pd.DataFrame
+    _buy_sell_dataset: str
 
     # TrainX, TrainY
     # ValidationX, ValidationY
     # TestX, TestY
-    train_validate_test_set: Tuple[
+    _train_validate_test_set: Tuple[
         pd.DataFrame, pd.DataFrame,
         pd.DataFrame, pd.DataFrame,
         pd.DataFrame, pd.DataFrame
@@ -42,14 +44,48 @@ class RefinedDataForBot:
             data_split_strategy: Tuple[float, float, float],
             should_normalize: bool,
             pca_strategy: Dict[str, any],
-            shuffle=False
+            shuffle=False,
+            penalty_dataset=False,
+            buy_sell_dataset='b'
     ):
-        self.ticker = ticker
-        self.features = features
-        self.data_split_strategy = data_split_strategy
-        self.should_normalize = should_normalize
-        self.pca_strategy = pca_strategy
-        self.shuffle = shuffle
+        self._ticker = ticker
+        self._features = features
+        self._data_split_strategy = data_split_strategy
+        self._should_normalize = should_normalize
+        self._pca_strategy = pca_strategy
+        self._shuffle = shuffle
+        self._penalty_dataset = penalty_dataset
+        self._buy_sell_dataset = buy_sell_dataset
+
+    @staticmethod
+    def get_dataset_common(pca_components: Optional[int], should_use_penalty_dataset=False, buy_sell_dataset='b') -> Tuple[
+        pd.DataFrame, pd.DataFrame,
+        pd.DataFrame, pd.DataFrame,
+        pd.DataFrame, pd.DataFrame
+    ]:
+        should_use_pca = pca_components is not None and pca_components is not 0
+        return RefinedData(
+            "NZDUSD=X",
+            "all",
+            (0.7, 0.15, 0.15),
+            True,
+            {
+                'use': should_use_pca,
+                'pca_components': pca_components,
+                'pca_features_to_exclude': [
+                    "Open",
+                    "High",
+                    "Low",
+                    "Close",
+                    "Adj Close",
+                    "Volume"
+                ]
+            },
+            shuffle=False,
+            penalty_dataset=should_use_penalty_dataset,
+            buy_sell_dataset=buy_sell_dataset
+        ).get_data()
+
 
     def get_data(self) -> Tuple[
         pd.DataFrame, pd.DataFrame,
@@ -61,52 +97,58 @@ class RefinedDataForBot:
         self._train_validation_test_splitter()
         self._normalize_individual_datasets()
         self._perform_pca()
-        return self.train_validate_test_set
+        return self._train_validate_test_set
 
     def _get_predictors(self):
 
         # Assign Filepath
-        file_path = '../../' + self.ticker + '_input_signals.csv'
+        file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_input_signals.csv'
 
         # Check if the ticker csv exists.
         if not os.path.exists(file_path):
             raise Exception("Predictor csv for this ticker is not available.")
 
         # Read predictors from csv
-        self.predictors = pd.read_csv(file_path)
+        self._predictors = pd.read_csv(file_path)
 
         # Remove irrelevant predictors
-        if not self.features == "all":
-            self.predictors = self.predictors[self.features]
+        if not self._features == "all":
+            self._predictors = self._predictors[self._features]
 
         # Get predictor names
-        self.predictors_labels = list(self.predictors.columns)
+        self._predictors_labels = list(self._predictors.columns)
 
     def _get_targets(self):
 
         # Assign Filepath
-        file_path = '../../' + self.ticker + '_output_signals.csv'
+
+        if self._penalty_dataset:
+            file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_clf_proxy_index.csv'
+        elif self._buy_sell_dataset == 'b':
+            file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_output_signals_buy.csv'
+        else:
+            file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_output_signals_sell.csv'
 
         # Check if the ticker csv exists.
         if not os.path.exists(file_path):
             raise Exception("Target csv for this ticker is not available.")
 
         # Read target from csv
-        self.targets = pd.read_csv(file_path)
+        self._targets = pd.read_csv(file_path)
 
     def _train_validation_test_splitter(self):
 
-        train_ratio = self.data_split_strategy[0]
-        validation_ratio = self.data_split_strategy[1]
-        test_ratio = self.data_split_strategy[2]
+        train_ratio = self._data_split_strategy[0]
+        validation_ratio = self._data_split_strategy[1]
+        test_ratio = self._data_split_strategy[2]
 
         # train is now 75% of the entire data set
         # the _junk suffix means that we drop that variable completely
         x_train, x_test, y_train, y_test = train_test_split(
-            self.predictors,
-            self.targets,
+            self._predictors,
+            self._targets,
             test_size=1 - train_ratio,
-            shuffle=self.shuffle
+            shuffle=self._shuffle
         )
 
         # test is now 10% of the initial data set
@@ -115,16 +157,16 @@ class RefinedDataForBot:
             x_test,
             y_test,
             test_size=test_ratio / (test_ratio + validation_ratio),
-            shuffle=self.shuffle
+            shuffle=self._shuffle
         )
 
-        self.train_validate_test_set = (x_train, y_train, x_val, y_val, x_test, y_test)
+        self._train_validate_test_set = (x_train, y_train, x_val, y_val, x_test, y_test)
 
     def _normalize_individual_datasets(self):
-        if not self.should_normalize:
+        if not self._should_normalize:
             return
 
-        for dataset in self.train_validate_test_set:
+        for dataset in self._train_validate_test_set:
             minmax_scale(
                 dataset,
                 feature_range=(0,1),
@@ -134,21 +176,21 @@ class RefinedDataForBot:
 
     def _perform_pca(self):
 
-        if self.pca_strategy["use"] is False:
+        if self._pca_strategy["use"] is False:
             return
 
         required_labels = list(
-            set(self.predictors_labels) -
-            set(self.pca_strategy["pca_features_to_exclude"])
+            set(self._predictors_labels) -
+            set(self._pca_strategy["pca_features_to_exclude"])
         )
 
         new_datasets = []
 
         i = 0
-        for dataset in self.train_validate_test_set:
+        for dataset in self._train_validate_test_set:
 
             if i % 2 != 0:
-                new_datasets.append(self.train_validate_test_set[i])
+                new_datasets.append(self._train_validate_test_set[i])
                 i += 1
                 continue
 
@@ -156,21 +198,21 @@ class RefinedDataForBot:
                 pcaUtility.perform_pca(
                     required_labels,
                     dataset,
-                    self.pca_strategy["pca_components"]
+                    self._pca_strategy["pca_components"]
                 )
             )
             i += 1
 
-        self.train_validate_test_set = tuple(new_datasets)
+        self._train_validate_test_set = tuple(new_datasets)
 
 if __name__ == "__main__":
-    a = RefinedDataForBot(
+    a = RefinedData(
         "NZDUSD=X",
         "all",
         (0.7, 0.15, 0.15),
         True,
         {
-            'use': False,
+            'use': True,
             'pca_components': 3,
             'pca_features_to_exclude': [
                 "Open",

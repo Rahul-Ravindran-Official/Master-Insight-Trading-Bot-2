@@ -3,7 +3,14 @@ import numpy as np
 
 
 class SignalProvider:
+
     def get_signal(self) -> np.array:
+        pass
+
+    def get_buy_signal(self) -> np.array:
+        pass
+
+    def get_sell_signal(self) -> np.array:
         pass
 
 
