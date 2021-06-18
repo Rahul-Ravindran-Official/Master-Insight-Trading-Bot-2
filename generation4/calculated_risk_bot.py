@@ -10,7 +10,6 @@ from hyperopt import hp
 from hyperopt import fmin, tpe
 
 
-
 class CalculatedRiskBot:
 
     # Input Parameters
@@ -132,7 +131,7 @@ class CalculatedRiskBot:
 
             buy_price = price[i]
             take_profit_trigger_level = buy_price + (take_profit_price + self._spread)
-            take_loss_trigger_level = buy_price - (stop_loss_price + self._spread)
+            take_loss_trigger_level = buy_price - (stop_loss_price - self._spread)
             days_holding = 0
 
             # Append By Default

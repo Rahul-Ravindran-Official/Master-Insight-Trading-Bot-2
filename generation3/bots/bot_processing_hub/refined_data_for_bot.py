@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import minmax_scale
 
 from generation3.bots.bot_processing_hub.PCA import pcaUtility
+from sys import platform as _platform
 
 
 class RefinedData:
@@ -102,11 +103,15 @@ class RefinedData:
     def _get_predictors(self):
 
         # Assign Filepath
-        file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_input_signals.csv'
+
+        if _platform == "darwin":
+            file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_input_signals.csv'
+        else:
+            file_path = '/student/ravin125/r/master-insight/generation3/bots/datasets/' + self._ticker + '_input_signals.csv'
 
         # Check if the ticker csv exists.
         if not os.path.exists(file_path):
-            raise Exception("Predictor csv for this ticker is not available.")
+            raise Exception("Predictor csv for the ticker is not available.")
 
         # Read predictors from csv
         self._predictors = pd.read_csv(file_path)
@@ -123,11 +128,20 @@ class RefinedData:
         # Assign Filepath
 
         if self._penalty_dataset:
-            file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_clf_proxy_index.csv'
+            if _platform == "darwin":
+                file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_clf_proxy_index.csv'
+            else:
+                file_path = '/student/ravin125/r/master-insight/generation3/bots/datasets/' + self._ticker + '_clf_proxy_index.csv'
         elif self._buy_sell_dataset == 'b':
-            file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_output_signals_buy.csv'
+            if _platform == "darwin":
+                file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_output_signals_buy.csv'
+            else:
+                file_path = '/student/ravin125/r/master-insight/generation3/bots/datasets/' + self._ticker + '_output_signals_buy.csv'
         else:
-            file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_output_signals_sell.csv'
+            if _platform == "darwin":
+                file_path = '/Users/rahul/Main/CloudStation/Spizen/spizen-forex/master-insight-trading-bot-2/generation3/bots/datasets/' + self._ticker + '_output_signals_sell.csv'
+            else:
+                file_path = '/student/ravin125/r/master-insight/generation3/bots/datasets/' + self._ticker + '_output_signals_sell.csv'
 
         # Check if the ticker csv exists.
         if not os.path.exists(file_path):
